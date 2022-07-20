@@ -36,15 +36,6 @@ namespace ConsoleApp1
 
 
 
-
-
-
-
-            Minerals.displayInventory();
-
-            Console.ReadLine();
-
-
             float fuel = 100.0f;
             int crew = 50;
             float engineStatus = 100.0f;
