@@ -335,17 +335,18 @@ namespace ConsoleApp1
 
                     if (option == "help")
                     {
-                        Console.WriteLine("STATUS      Displays the status of ship systems.");
+                        Console.Write("\n\n");
+                        Console.WriteLine("STATUS              Displays the status of ship systems.");
                         Console.WriteLine("RESTART ENGINE      Restarts the engine in case of a shutdown. Will time to come back online.");
-                        Console.WriteLine("SPEED #      Sets the engine speed to the value given in #, the higher the speed the faster the engine degrades and uses more fuel.");
-                        Console.WriteLine("SHIELD      Toggles the shields on and off.");
-                        Console.WriteLine("ENGINE      Toggles the engine on and off.");
-                        Console.WriteLine("REPAIR ENGINE     Repairs the engine, consuming repair materials in the process.");
-                        Console.WriteLine("REPAIR HULL     Repairs the hull, consuming repair materials in the process.");
-                        Console.WriteLine("MINE     Activates mining drones at the expense of 5 fuel to harvest minerals from asteroids.");
-                        Console.WriteLine("EVADE     Avoids impact from enemy fire or asteroids, but consumes fuel in the process.");
-                        Console.WriteLine("INVENTORY     Displays collected resoruces.");
-                        Console.WriteLine("CLEAR      Clears the console.");
+                        Console.WriteLine("SPEED #             Sets the engine speed to the value given in #, the higher the speed the faster the engine degrades and uses more fuel.");
+                        Console.WriteLine("SHIELD              Toggles the shields on and off.");
+                        Console.WriteLine("ENGINE              Toggles the engine on and off.");
+                        Console.WriteLine("REPAIR ENGINE       Repairs the engine, consuming repair materials in the process.");
+                        Console.WriteLine("REPAIR HULL         Repairs the hull, consuming repair materials in the process.");
+                        Console.WriteLine("MINE                Activates mining drones at the expense of 5 fuel to harvest minerals from asteroids.");
+                        Console.WriteLine("EVADE               Avoids impact from enemy fire or asteroids, but consumes fuel in the process.");
+                        Console.WriteLine("INVENTORY           Displays collected resoruces.");
+                        Console.WriteLine("CLEAR               Clears the console.");
                         Console.Write("\n\n");
 
                     }
