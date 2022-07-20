@@ -9,13 +9,13 @@ namespace ConsoleApp1
         public string resourceName;
         public int conversionRate;
         public int convertsTo; //Which useable resource it refines to, like 1 for repair materials
+        public int sellsFor;
         public int total;
         public int maxAmount;
 
         public void displayInventory()
         {
-            Console.WriteLine("Resource: " + resourceName );
-            Console.WriteLine("Total: " + total);
+            Console.WriteLine(resourceName + " " + total + "/" + maxAmount);
         }
 
     }
@@ -30,30 +30,35 @@ namespace ConsoleApp1
             Minerals.resourceName = "Minerals";
             Minerals.conversionRate = 10;
             Minerals.convertsTo = 1;
+            Minerals.sellsFor = 5;
             Minerals.total = 0;
-            Minerals.maxAmount = 0;
+            Minerals.maxAmount = 100;
 
 
 
 
             float fuel = 100.0f;
+            float fuelMax = 100.0f;
             int crew = 50;
             float engineStatus = 100.0f;
             float shieldStatus = 100.0f;
             float hullStatus = 100.0f;
             float atmosphereStatus = 100.0f;
             int repairMaterials = 50;
+            int money = 50;
 
             bool engineShutdown = true;
             bool engineBroken = false;
+            int engineStopsToDamage = 3;
             bool shieldShutdown = true;
             int engineWaitTime = -1;
             int speed = 0;
 
             // Minerals, Exotic Gas, 
             int[] resources = { 0, 0 };
+            int temporaryVar;
 
-            int progressToNextLevel = 120;
+            int progressToNextLevel = 500;
             int chosenCampaign = 1;
             bool gameStart = false;
 
@@ -85,10 +90,19 @@ namespace ConsoleApp1
                     Console.Clear();
                 }
 
-                
+                Console.WriteLine("Press enter to progress time");
 
                 while (true)
                 {
+
+                    if (progressToNextLevel < 0)
+                    {
+                        Console.WriteLine("You reached your destination safely!\nThank you for playing the demo of my game!\nPlease send feedback to codebot247@gmail.com !\n");
+                        Console.WriteLine("Press enter to continue");
+                        Console.ReadLine();
+                        return;
+                    }
+
                     // GAMEOVER CONDITIONS
 
                     if(atmosphereStatus <= 0)
@@ -106,7 +120,9 @@ namespace ConsoleApp1
                     {
                         Console.WriteLine("The crew by some means and inaction of yours has died.\n You're left stranded and hepless in a floating coffin as the last of the life support and systems fail.\n You wonder what you could have done better.\n Press enter to continue,");
                         Console.ReadLine();
+                        return;
                     }
+
 
 
                     var rand = new Random();
@@ -183,7 +199,10 @@ namespace ConsoleApp1
 
                     // SYSTEM DEGREDATION
 
-                    engineStatus -= ((float)rand.NextDouble() * (0.5f * speed)); // Engine
+                    if (rand.Next(0, 10) > 8)
+                    {
+                        engineStatus -= ((float)rand.NextDouble() * (1.25f * speed)); // Engine
+                    }
 
                     if (!shieldShutdown){
                         shieldStatus -= 4.0f + (float)rand.NextDouble(); // Shields
@@ -206,7 +225,8 @@ namespace ConsoleApp1
 
 
                     // EVENT CHECKS 
-                    if (asteroidField == true)
+
+                    if (asteroidField == true && !engineShutdown)
                     {
                         if (rand.Next(0, 10) > 8)
                         {
@@ -214,7 +234,7 @@ namespace ConsoleApp1
                         }
                     }
                     
-                    if (timeToAsteroidImpact > 0)
+                    if (timeToAsteroidImpact > 0 && !engineShutdown)
                     {
                         Console.WriteLine("PROXIMITY WARNING - SHIELD RECOMMENDED");
                         timeToAsteroidImpact -= 1;
@@ -284,9 +304,11 @@ namespace ConsoleApp1
                             {
                                 speed = 5;
                             }
-                            else if (Int32.Parse(speedToChangeTo) < 0)
+                            else if (Int32.Parse(speedToChangeTo) < 1)
                             {
-                                speed = 0;
+                                Console.WriteLine("CANNOT STOP THE ENGINE WHILE HOT. DISABLE ENGINE TO STOP.");
+                                Console.WriteLine("!! STOPPING ENGINE FREQUENTLY CAN CAUSE DAMAGE !!");
+                                speed = 1;
                             }
                             else
                             {
@@ -308,6 +330,7 @@ namespace ConsoleApp1
                     if (option == "clear")
                     {
                         Console.Clear();
+                        Console.WriteLine("Press enter to progress time");
                     }
 
                     if (option == "help")
@@ -319,7 +342,11 @@ namespace ConsoleApp1
                         Console.WriteLine("ENGINE      Toggles the engine on and off.");
                         Console.WriteLine("REPAIR ENGINE     Repairs the engine, consuming repair materials in the process.");
                         Console.WriteLine("REPAIR HULL     Repairs the hull, consuming repair materials in the process.");
+                        Console.WriteLine("MINE     Activates mining drones at the expense of 5 fuel to harvest minerals from asteroids.");
+                        Console.WriteLine("EVADE     Avoids impact from enemy fire or asteroids, but consumes fuel in the process.");
+                        Console.WriteLine("INVENTORY     Displays collected resoruces.");
                         Console.WriteLine("CLEAR      Clears the console.");
+                        Console.Write("\n\n");
 
                     }
 
@@ -329,6 +356,43 @@ namespace ConsoleApp1
                     {
                         Minerals.displayInventory();
                     }
+                    
+                    if (option == "evade")
+                    {
+                        if (timeToAsteroidImpact > 0)
+                        {
+                            temporaryVar = rand.Next(2,6);
+                            timeToAsteroidImpact = -1;
+                            fuel -= temporaryVar;
+                            Console.WriteLine("!! SUCCESSFULLY AVOIDED OBJECT !!");
+                            Console.WriteLine(temporaryVar + " FUEL CONSUMED IN EVASION");
+                            
+                        }
+                        else
+                        {
+                            Console.WriteLine("NOTHING TO EVADE");
+                        }
+                    }
+
+                    // MINING ASTEROIDS
+                    if (option == "mine")
+                    {
+                        if (timeToAsteroidImpact > 0)
+                        {
+                            temporaryVar = rand.Next(10, 15);
+                            fuel -= 5.0f;
+                            Minerals.total += temporaryVar;
+                            Console.WriteLine("MINERALS HARVESTED: " + temporaryVar);
+                            if (Minerals.total > Minerals.maxAmount)
+                            {
+                                Minerals.total = Minerals.maxAmount;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("NOT IN PROXIMITY TO ASTEROID");
+                        }
+                    }
 
                     if (option == "engine")
                     {
@@ -336,8 +400,19 @@ namespace ConsoleApp1
                         {
                             Console.WriteLine("ENGINE REQUIRES RESTART");
                         }
+
+                        
+
                         else
                         {
+                            if (engineShutdown == true)
+                            {
+                                if (engineStopsToDamage == 0)
+                                {
+                                    engineStatus -= 5.0f;
+                                }
+                                speed = 1;
+                            }
                             engineShutdown = !engineShutdown;
                         }
                     }
@@ -405,10 +480,22 @@ namespace ConsoleApp1
 
                     // SHIELD //
 
-                    if (option == "shield" && shieldStatus > 0.0)
+                    if (option == "shield")
                     {
-                        shieldShutdown = !(shieldStatus > 0 && shieldShutdown == true);
+                        if (shieldStatus >= 25.0 && shieldShutdown == true)
+                        {
+                            shieldShutdown = false;
+                        }
+                        else if (shieldShutdown == false)
+                        {
+                            shieldShutdown = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("SHIELD MUST HAVE A MINIMUM CHARGE OF 25.0% TO ENABLE");
+                        }
                     }
+                    
 
 
 
@@ -417,7 +504,7 @@ namespace ConsoleApp1
                     if (option == "status")
                     {
                         Console.Write("\n");
-                        Console.WriteLine("Fuel: " + fuel.ToString("0.00") + "%");
+                        Console.WriteLine("Fuel: " + fuel.ToString("0.00") + "%" + "/" + fuelMax.ToString("0.00") + "%");
                         Console.WriteLine("Atmospheric Status: " + atmosphereStatus.ToString("0.00") + "%");
                         Console.WriteLine("Hull Condition:  " + hullStatus.ToString("0.00") + "%");
                         Console.Write("Engine Condition: " + engineStatus.ToString("0.00") + "%");
@@ -444,6 +531,7 @@ namespace ConsoleApp1
                         Console.WriteLine("Crew: " + crew);
 
                         Console.WriteLine("\nDistance left: " + progressToNextLevel);
+                        Console.Write("\n\n");
                     }
                 }
             }
