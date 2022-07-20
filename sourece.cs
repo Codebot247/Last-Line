@@ -14,7 +14,7 @@ namespace ConsoleApp1
 
         public void displayInventory()
         {
-            Console.WriteLine("Resource: " + resourceName);
+            Console.WriteLine("Resource: " + resourceName );
             Console.WriteLine("Total: " + total);
         }
 
@@ -54,6 +54,7 @@ namespace ConsoleApp1
             int repairMaterials = 50;
 
             bool engineShutdown = true;
+            bool engineBroken = false;
             bool shieldShutdown = true;
             int engineWaitTime = -1;
             int speed = 0;
@@ -65,6 +66,15 @@ namespace ConsoleApp1
             int chosenCampaign = 1;
             bool gameStart = false;
 
+
+            // Event / situation affectors
+            bool asteroidField = true;
+            int timeToAsteroidImpact = -1;
+
+            bool combatArea = false;
+            bool scrapShipArea = false;
+            bool nebulaArea = false;
+            
 
             Console.Clear();
             while (true)
@@ -84,10 +94,30 @@ namespace ConsoleApp1
                     Console.Clear();
                 }
 
-
+                
 
                 while (true)
                 {
+                    // GAMEOVER CONDITIONS
+
+                    if(atmosphereStatus <= 0)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("CRITICAL DECOMPRESSION - SHIP DAMAGED BEYOND REPAIR.");
+                        Console.WriteLine("PRESS ENTER TO CONTINUE.");
+                        Console.ReadLine();
+                        Console.Clear();
+                        Console.WriteLine("Due to being unable to manage keeping the hull intact the ship has depressurized and suffocated the crew.\n You cling on to the last shreds of oxygen you can before you too asphyxiate, lost to the void.\n Press enter to continue.");
+                        Console.ReadLine();
+                        return;
+                    }
+                    if (crew <= 0)
+                    {
+                        Console.WriteLine("The crew by some means and inaction of yours has died.\n You're left stranded and hepless in a floating coffin as the last of the life support and systems fail.\n You wonder what you could have done better.\n Press enter to continue,");
+                        Console.ReadLine();
+                    }
+
+
                     var rand = new Random();
 
                     // SYSTEM WARNINGS
@@ -145,29 +175,93 @@ namespace ConsoleApp1
                         engineWaitTime -= 1;
                     }
 
-                    if (engineShutdown == true)
+                    if (engineShutdown == true && engineBroken == true)
                     {
                         if (engineWaitTime == 0)
                         {
                             speed = 1;
                             engineWaitTime = -1;
                             engineShutdown = false;
+                            Console.WriteLine("!! ENGINE RESTARTED !!");
                         }
                     }
 
 
+                    // PROGRESSION TO NEXT LEVEL
                     progressToNextLevel -= speed;
 
                     // SYSTEM DEGREDATION
 
-                    engineStatus -= ((float)rand.NextDouble() * speed);
-                    shieldStatus -= (float)rand.NextDouble();
-                    fuel -= 0.15f * speed;
+                    engineStatus -= ((float)rand.NextDouble() * (0.5f * speed)); // Engine
 
+                    if (!shieldShutdown){
+                        shieldStatus -= 4.0f + (float)rand.NextDouble(); // Shields
+                    }
+
+                    if (atmosphereStatus <= 50.0)
+                    {
+                        if (rand.Next(0, 10) > 4)
+                        {
+                            crew -= rand.Next(1, 3 * (int)((100.0 - atmosphereStatus) / 10));   // Crew death
+                        }
+                    }
+
+                    if (hullStatus <= 75.0)
+                    {
+                        atmosphereStatus -= ((100.0f - hullStatus) / 11);
+                    }
+
+                    fuel -= 0.15f * speed; // Fuel
+
+
+                    // EVENT CHECKS 
+                    if (asteroidField == true)
+                    {
+                        if (rand.Next(0, 10) > 8)
+                        {
+                            timeToAsteroidImpact = rand.Next(3, 4);
+                        }
+                    }
+                    
+                    if (timeToAsteroidImpact > 0)
+                    {
+                        Console.WriteLine("PROXIMITY WARNING - SHIELD RECOMMENDED");
+                        timeToAsteroidImpact -= 1;
+                        if (timeToAsteroidImpact == 0)
+                        {
+                            timeToAsteroidImpact = -1;
+                            if (shieldShutdown == true)
+                            {
+                                hullStatus -= rand.Next(3, 8);
+                                Console.WriteLine("HULL HIT - ASSESS DAMAGE");
+                            }
+                            else
+                            {
+                                shieldStatus -= rand.Next(3, 8);
+                                Console.WriteLine("SHIELD HIT - MONITOR CHARGE");
+                            }
+                        }
+                    }
+
+
+                    // SHIELD CHARGE / SHUTDOWN CHECK 
+                    if (shieldStatus < 0)
+                    {
+                        shieldStatus = 0;
+                        shieldShutdown = true;
+                    }
+                    if (shieldShutdown == true)
+                    {
+                        shieldStatus += 5.5f;
+                        if (shieldStatus > 100.0f)
+                        {
+                            shieldStatus = 100.0f;
+                        }
+                    }
 
                     Console.Write(">");
 
-                    string option = Console.ReadLine();
+                    string option = Console.ReadLine().ToLower();
                     string optionProcessed = "";
                     string speedToChangeTo = "";
 
@@ -187,7 +281,7 @@ namespace ConsoleApp1
                         }
                     }
 
-                    if (optionProcessed.ToLower() == "speed")
+                    if (optionProcessed == "speed")
                     {
 
                         if (engineShutdown != true)
@@ -220,17 +314,18 @@ namespace ConsoleApp1
                         }
                     }
 
-                    if (option.ToLower() == "clear")
+                    if (option == "clear")
                     {
                         Console.Clear();
                     }
 
-                    if (option.ToLower() == "help")
+                    if (option == "help")
                     {
                         Console.WriteLine("STATUS      Displays the status of ship systems.");
                         Console.WriteLine("RESTART ENGINE      Restarts the engine in case of a shutdown. Will time to come back online.");
                         Console.WriteLine("SPEED #      Sets the engine speed to the value given in #, the higher the speed the faster the engine degrades and uses more fuel.");
                         Console.WriteLine("SHIELD      Toggles the shields on and off.");
+                        Console.WriteLine("ENGINE      Toggles the engine on and off.");
                         Console.WriteLine("REPAIR ENGINE     Repairs the engine a bit, consuming repair materials in the process.");
                         Console.WriteLine("CLEAR      Clears the console.");
 
@@ -238,34 +333,71 @@ namespace ConsoleApp1
 
                     // REPAIR ENGINE //
 
-                    if (option.ToLower() == "inventory")
+                    if (option == "inventory")
                     {
-
+                        Minerals.displayInventory();
                     }
 
-                    if (option.ToLower() == "repair engine")
+                    if (option == "engine")
                     {
-                        if (engineStatus < 100.0)
+                        if (engineBroken)
                         {
-                            if (repairMaterials >= ((100 - engineStatus) / 2))
-                            {
-                                repairMaterials -= (int)((100 - engineStatus) / 2);
-                                engineStatus += ((100 - engineStatus));
+                            Console.WriteLine("ENGINE REQUIRES RESTART");
+                        }
+                        else
+                        {
+                            engineShutdown = !engineShutdown;
+                        }
+                    }
 
-                                if (engineStatus > 100.0)
+
+                    if (option == "repair hull")
+                    {
+                        if (hullStatus < 100.0)
+                        {
+                            if (repairMaterials >= ((100 - hullStatus)))
+                            {
+                                repairMaterials -= (int)((100 - hullStatus));
+                                hullStatus += ((100 - hullStatus));
+
+                                if (hullStatus > 100.0)
                                 {
-                                    engineStatus = 100;
+                                    hullStatus = 100;
                                 }
 
+                                Console.WriteLine("HULL REPAIRED");
                             }
 
                             else
                             {
-                                Console.WriteLine("YOU LACK SUFFICIENT MATERIALS TO FIX IT");
-                                Console.WriteLine("Press enter to continue...");
+                                Console.WriteLine("!! YOU LACK SUFFICIENT MATERIALS TO FIX IT !!");
 
-                                option = Console.ReadLine();
+                            }
+                        }
 
+
+                        if (option == "repair engine")
+                        {
+                            if (engineStatus < 100.0)
+                            {
+                                if (repairMaterials >= ((100 - engineStatus) / 2))
+                                {
+                                    repairMaterials -= (int)((100 - engineStatus) / 2);
+                                    engineStatus += ((100 - engineStatus));
+
+                                    if (engineStatus > 100.0)
+                                    {
+                                        engineStatus = 100;
+                                    }
+
+                                    Console.WriteLine("ENGINE REPAIRED");
+                                }
+
+                                else
+                                {
+                                    Console.WriteLine("YOU LACK SUFFICIENT MATERIALS TO FIX IT");
+
+                                }
                             }
                         }
                     }
@@ -273,7 +405,7 @@ namespace ConsoleApp1
 
                     // RESTART ENGINE //
 
-                    if (option.ToLower() == "restart engine" && engineShutdown == true && engineWaitTime < 0)
+                    if (option == "restart engine" && engineShutdown == true && engineBroken == true && engineWaitTime < 0)
                     {
                         engineWaitTime = 2;
                     }
@@ -281,7 +413,7 @@ namespace ConsoleApp1
 
                     // SHIELD //
 
-                    if (option.ToLower() == "shield")
+                    if (option == "shield" && shieldStatus > 0.0)
                     {
                         shieldShutdown = !(shieldStatus > 0 && shieldShutdown == true);
                     }
@@ -290,7 +422,7 @@ namespace ConsoleApp1
 
                     // STATUS //
 
-                    if (option.ToLower() == "status")
+                    if (option == "status")
                     {
                         Console.Write("\n");
                         Console.WriteLine("Fuel: " + fuel.ToString("0.00") + "%");
