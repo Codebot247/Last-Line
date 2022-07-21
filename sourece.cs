@@ -1,9 +1,12 @@
 using System;
-
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ConsoleApp1
 {
 
+    [Serializable]
     class Resource
     {
         public string resourceName;
@@ -13,12 +16,68 @@ namespace ConsoleApp1
         public int total;
         public int maxAmount;
 
+
         public void displayInventory()
         {
             Console.WriteLine(resourceName + " " + total + "/" + maxAmount);
         }
 
+        public string[] returnResource()
+        {
+            string[] returnResourceString = { total.ToString(),maxAmount.ToString() };
+            return returnResourceString;
+        }
+
     }
+
+    [Serializable]
+    class Ship
+    {
+        public float fuel;
+        public float fuelMax;
+        public int crew;
+        public float engineStatus;
+        public float shieldStatus;
+        public float hullStatus;
+        public float atmosphereStatus;
+        public int repairMaterials;
+        public int money;
+
+        public bool engineShutdown;
+        public bool engineBroken;
+        public int engineStopsToDamage;
+        public bool shieldShutdown;
+        public int engineWaitTime;
+        public int speed;
+
+        public string[] returnShip()
+        {
+            string[] returnShipString = { fuel.ToString(), fuelMax.ToString(), crew.ToString(), engineStatus.ToString(), shieldStatus.ToString(),
+                    hullStatus.ToString(), atmosphereStatus.ToString(), repairMaterials.ToString(), money.ToString(), engineShutdown.ToString(),
+                    engineBroken.ToString(),engineStopsToDamage.ToString(), shieldShutdown.ToString(), engineWaitTime.ToString(), speed.ToString() };
+            return returnShipString;
+        }
+    }
+
+    class Scenario
+    {
+        public bool asteroidField;
+        public int timeToAsteroidImpact;
+        public int progressToNextLevel;
+
+        public bool combatArea;
+        public bool scrapShipArea;
+        public bool nebulaArea;
+        public string[] returnScenario()
+        {
+            string[] returnScenarioString = { asteroidField.ToString(), timeToAsteroidImpact.ToString(),
+                progressToNextLevel.ToString(),combatArea.ToString(),scrapShipArea.ToString(),
+                nebulaArea.ToString()
+            };
+            return returnScenarioString;
+        }
+    }
+
 
 
     class Program
@@ -28,49 +87,59 @@ namespace ConsoleApp1
             // INITIALIZING RESOURCES
             Resource Minerals = new Resource();
             Minerals.resourceName = "Minerals";
-            Minerals.conversionRate = 10;
+            Minerals.conversionRate = 20;
             Minerals.convertsTo = 1;
             Minerals.sellsFor = 5;
             Minerals.total = 0;
             Minerals.maxAmount = 100;
 
+            Resource ExoticGas = new Resource();
+            ExoticGas.resourceName = "Exotic Gas";
+            ExoticGas.conversionRate = 50;
+            ExoticGas.convertsTo = 2;
+            ExoticGas.sellsFor = 25;
+            ExoticGas.total = 0;
+            ExoticGas.maxAmount = 100;
 
 
 
-            float fuel = 100.0f;
-            float fuelMax = 100.0f;
-            int crew = 50;
-            float engineStatus = 100.0f;
-            float shieldStatus = 100.0f;
-            float hullStatus = 100.0f;
-            float atmosphereStatus = 100.0f;
-            int repairMaterials = 50;
-            int money = 50;
 
-            bool engineShutdown = true;
-            bool engineBroken = false;
-            int engineStopsToDamage = 3;
-            bool shieldShutdown = true;
-            int engineWaitTime = -1;
-            int speed = 0;
+            Ship playerShip = new Ship();
+            playerShip.fuel = 100.0f;
+            playerShip.fuelMax = 100.0f;
+            playerShip.crew = 50;
+            playerShip.engineStatus = 100.0f;
+            playerShip.shieldStatus = 100.0f;
+            playerShip.hullStatus = 100.0f;
+            playerShip.atmosphereStatus = 100.0f;
+            playerShip.repairMaterials = 50;
+            playerShip.money = 50;
 
-            // Minerals, Exotic Gas, 
-            int[] resources = { 0, 0 };
+            playerShip.engineShutdown = true;
+            playerShip.engineBroken = false;
+            playerShip.engineStopsToDamage = 3;
+            playerShip.shieldShutdown = true;
+            playerShip.engineWaitTime = -1;
+            playerShip.speed = 0;
+
             int temporaryVar;
 
-            int progressToNextLevel = 500;
+
             int chosenCampaign = 1;
             bool gameStart = false;
 
 
             // Event / situation affectors
-            bool asteroidField = true;
-            int timeToAsteroidImpact = -1;
+            Scenario startingScenario = new Scenario();
+            startingScenario.asteroidField = false;
+            startingScenario.timeToAsteroidImpact = -1;
+            startingScenario.progressToNextLevel = 500;
 
-            bool combatArea = false;
-            bool scrapShipArea = false;
-            bool nebulaArea = false;
-            
+            startingScenario.combatArea = false;
+            startingScenario.scrapShipArea = false;
+            startingScenario.nebulaArea = false;
+
+            int scenario = 1;
 
             Console.Clear();
             while (true)
@@ -80,11 +149,51 @@ namespace ConsoleApp1
                     Console.WriteLine("WELCOME, ENGINEER");
                     Console.WriteLine("PLEASE SELECT A POSITION");
                     Console.WriteLine("1. INNER RING TRADING SHIP (EASY)");
-                    string choice = Console.ReadLine();
+                    Console.WriteLine("L. LOAD GAME");
+                    string choice = Console.ReadLine().ToLower();
                     if (choice == "1")
                     {
-                        repairMaterials = 150;
-                        crew = 100;
+                        playerShip.repairMaterials = 150;
+                        playerShip.crew = 100;
+                    }
+                    if (choice == "l")
+                    {
+                        string[] shipVariables = System.IO.File.ReadAllLines(@"S_P1.txt");
+                        playerShip.fuel = float.Parse(shipVariables[0]);
+                        playerShip.fuelMax = float.Parse(shipVariables[1]);
+                        playerShip.crew = Int32.Parse(shipVariables[2]);
+                        playerShip.engineStatus = float.Parse(shipVariables[3]);
+                        playerShip.shieldStatus = float.Parse(shipVariables[4]);
+                        playerShip.hullStatus = float.Parse(shipVariables[5]);
+                        playerShip.atmosphereStatus = float.Parse(shipVariables[6]);
+                        playerShip.repairMaterials = Int32.Parse(shipVariables[7]);
+                        playerShip.money = Int32.Parse(shipVariables[8]);
+
+                        playerShip.engineShutdown = bool.Parse(shipVariables[9]);
+                        playerShip.engineBroken = bool.Parse(shipVariables[10]);
+                        playerShip.engineStopsToDamage = int.Parse(shipVariables[11]);
+                        playerShip.shieldShutdown = bool.Parse(shipVariables[12]);
+                        playerShip.engineWaitTime = int.Parse(shipVariables[13]);
+                        playerShip.speed = int.Parse(shipVariables[14]);
+
+
+                        string[] scenarioVariables = System.IO.File.ReadAllLines(@"S_S1.txt");
+                        startingScenario.asteroidField = bool.Parse(scenarioVariables[0]);
+                        startingScenario.timeToAsteroidImpact = int.Parse(scenarioVariables[1]);
+                        startingScenario.progressToNextLevel = int.Parse(scenarioVariables[2]);
+
+                        startingScenario.combatArea = bool.Parse(scenarioVariables[3]);
+                        startingScenario.scrapShipArea = bool.Parse(scenarioVariables[4]);
+                        startingScenario.nebulaArea = bool.Parse(scenarioVariables[5]);
+
+
+
+                        string[] resourceVariables = System.IO.File.ReadAllLines(@"S_R1.txt");
+                        Minerals.total = Int32.Parse(resourceVariables[0]);
+                        Minerals.maxAmount = Int32.Parse(resourceVariables[1]);
+
+                        ExoticGas.total = Int32.Parse(resourceVariables[2]);
+                        ExoticGas.maxAmount = Int32.Parse(resourceVariables[3]);
                     }
 
                     Console.Clear();
@@ -95,7 +204,7 @@ namespace ConsoleApp1
                 while (true)
                 {
 
-                    if (progressToNextLevel < 0)
+                    if (startingScenario.progressToNextLevel < 0)
                     {
                         Console.WriteLine("You reached your destination safely!\nThank you for playing the demo of my game!\nPlease send feedback to codebot247@gmail.com !\n");
                         Console.WriteLine("Press enter to continue");
@@ -103,152 +212,169 @@ namespace ConsoleApp1
                         return;
                     }
 
-                    // GAMEOVER CONDITIONS
 
-                    if(atmosphereStatus <= 0)
+                    /*                                   GAMEOVER CONDITIONS                        */
+
+                    if (playerShip.atmosphereStatus <= 0)
                     {
                         Console.Clear();
                         Console.WriteLine("CRITICAL DECOMPRESSION - SHIP DAMAGED BEYOND REPAIR.");
                         Console.WriteLine("PRESS ENTER TO CONTINUE.");
                         Console.ReadLine();
                         Console.Clear();
-                        Console.WriteLine("Due to being unable to manage keeping the hull intact the ship has depressurized and suffocated the crew.\n You cling on to the last shreds of oxygen you can before you too asphyxiate, lost to the void.\n Press enter to continue.");
+                        Console.WriteLine("Due to being unable to manage keeping the hull intact the ship has depressurized and suffocated the playerShip.crew.\n You cling on to the last shreds of oxygen you can before you too asphyxiate, lost to the void.\n Press enter to continue.");
                         Console.ReadLine();
                         return;
                     }
-                    if (crew <= 0)
+                    if (playerShip.crew <= 0)
                     {
-                        Console.WriteLine("The crew by some means and inaction of yours has died.\n You're left stranded and hepless in a floating coffin as the last of the life support and systems fail.\n You wonder what you could have done better.\n Press enter to continue,");
+                        Console.WriteLine("The playerShip.crew by some means and inaction of yours has died.\n You're left stranded and hepless in a floating coffin as the last of the life support and systems fail.\n You wonder what you could have done better.\n Press enter to continue,");
                         Console.ReadLine();
                         return;
                     }
 
-
+                    /*========================================================================================================*/
 
                     var rand = new Random();
 
+
+
+
+
+
+
                     // SYSTEM WARNINGS
 
-                    if (engineStatus <= 50.0 && engineStatus > 25.0)
+                    if (playerShip.engineStatus <= 50.0 && playerShip.engineStatus > 25.0)
                     {
                         Console.WriteLine("!! ENGINE STATUS WARNING !!");
                     }
-                    else if (engineStatus <= 25.0)
+                    else if (playerShip.engineStatus <= 25.0)
                     {
                         Console.WriteLine("!! CRITICAL ENGINE STATUS WARNING !!");
                     }
 
-                    if (shieldStatus <= 50.0 && shieldStatus > 25.0)
+                    if (playerShip.shieldStatus <= 50.0 && playerShip.shieldStatus > 25.0)
                     {
                         Console.WriteLine("!! SHIELD CHARGE WARNING !!");
                     }
-                    else if (shieldStatus <= 25.0)
+                    else if (playerShip.shieldStatus <= 25.0)
                     {
                         Console.WriteLine("!! CRITICAL SHIELD CHARGE WARNING !!");
                     }
 
 
-                    if (atmosphereStatus <= 50.0 && atmosphereStatus > 25.0)
+                    if (playerShip.atmosphereStatus <= 50.0 && playerShip.atmosphereStatus > 25.0)
                     {
                         Console.WriteLine("!! ATMOSPHERIC SAFETY WARNING !!");
                     }
-                    else if (atmosphereStatus <= 25.0)
+                    else if (playerShip.atmosphereStatus <= 25.0)
                     {
                         Console.WriteLine("!! CRITICAL ATMOSPHERIC SAFETY WARNING !!");
                     }
 
-                    if (hullStatus <= 50.0 && hullStatus > 25.0)
+                    if (playerShip.hullStatus <= 50.0 && playerShip.hullStatus > 25.0)
                     {
                         Console.WriteLine("!! MAJOR HULL DAMAGE !!");
                     }
-                    else if (hullStatus <= 25.0)
+                    else if (playerShip.hullStatus <= 25.0)
                     {
                         Console.WriteLine("!! CRITICAL HULL DAMAGE !!");
                     }
 
-                    if (fuel <= 50.0 && fuel > 25.0)
+                    if (playerShip.fuel <= 50.0 && playerShip.fuel > 25.0)
                     {
                         Console.WriteLine("!! LOW FUEL WARNING !!");
                     }
-                    else if (fuel <= 25.0)
+                    else if (playerShip.fuel <= 25.0)
                     {
                         Console.WriteLine("!! CRITICAL FUEL WARNING !!");
                     }
 
 
+
+
+
+
+
+
+
+
+
                     // WAIT TIME FOR ENGINE RESTART
-                    if (engineWaitTime > 0)
+                    if (playerShip.engineWaitTime > 0)
                     {
-                        engineWaitTime -= 1;
+                        playerShip.engineWaitTime -= 1;
                     }
 
-                    if (engineShutdown == true && engineBroken == true)
+                    if (playerShip.engineShutdown == true && playerShip.engineBroken == true)
                     {
-                        if (engineWaitTime == 0)
+                        if (playerShip.engineWaitTime == 0)
                         {
-                            speed = 1;
-                            engineWaitTime = -1;
-                            engineShutdown = false;
+                            playerShip.speed = 1;
+                            playerShip.engineWaitTime = -1;
+                            playerShip.engineShutdown = false;
                             Console.WriteLine("!! ENGINE RESTARTED !!");
                         }
                     }
 
 
                     // PROGRESSION TO NEXT LEVEL
-                    progressToNextLevel -= speed;
+                    startingScenario.progressToNextLevel -= playerShip.speed;
 
                     // SYSTEM DEGREDATION
 
                     if (rand.Next(0, 10) > 8)
                     {
-                        engineStatus -= ((float)rand.NextDouble() * (1.25f * speed)); // Engine
+                        playerShip.engineStatus -= ((float)rand.NextDouble() * (1.25f * playerShip.speed)); // Engine
                     }
 
-                    if (!shieldShutdown){
-                        shieldStatus -= 4.0f + (float)rand.NextDouble(); // Shields
+                    if (!playerShip.shieldShutdown)
+                    {
+                        playerShip.shieldStatus -= 4.0f + (float)rand.NextDouble(); // Shields
                     }
 
-                    if (atmosphereStatus <= 50.0)
+                    if (playerShip.atmosphereStatus <= 50.0)
                     {
                         if (rand.Next(0, 10) > 4)
                         {
-                            crew -= rand.Next(1, 3 * (int)((100.0 - atmosphereStatus) / 10));   // Crew death
+                            playerShip.crew -= rand.Next(1, 3 * (int)((100.0 - playerShip.atmosphereStatus) / 10));   // playerShip.crew death
                         }
                     }
 
-                    if (hullStatus <= 75.0)
+                    if (playerShip.hullStatus <= 75.0)
                     {
-                        atmosphereStatus -= ((100.0f - hullStatus) / 11);
+                        playerShip.atmosphereStatus -= ((100.0f - playerShip.hullStatus) / 11);
                     }
 
-                    fuel -= 0.15f * speed; // Fuel
+                    playerShip.fuel -= 0.15f * playerShip.speed; // Fuel
 
 
                     // EVENT CHECKS 
 
-                    if (asteroidField == true && !engineShutdown)
+                    if (startingScenario.asteroidField == true && !playerShip.engineShutdown)
                     {
                         if (rand.Next(0, 10) > 8)
                         {
-                            timeToAsteroidImpact = rand.Next(3, 4);
+                            startingScenario.timeToAsteroidImpact = rand.Next(3, 4);
                         }
                     }
-                    
-                    if (timeToAsteroidImpact > 0 && !engineShutdown)
+
+                    if (startingScenario.timeToAsteroidImpact > 0 && !playerShip.engineShutdown)
                     {
                         Console.WriteLine("PROXIMITY WARNING - SHIELD RECOMMENDED");
-                        timeToAsteroidImpact -= 1;
-                        if (timeToAsteroidImpact == 0)
+                        startingScenario.timeToAsteroidImpact -= 1;
+                        if (startingScenario.timeToAsteroidImpact == 0)
                         {
-                            timeToAsteroidImpact = -1;
-                            if (shieldShutdown == true)
+                            startingScenario.timeToAsteroidImpact = -1;
+                            if (playerShip.shieldShutdown == true)
                             {
-                                hullStatus -= rand.Next(3, 8);
+                                playerShip.hullStatus -= rand.Next(3, 8);
                                 Console.WriteLine("HULL HIT - ASSESS DAMAGE");
                             }
                             else
                             {
-                                shieldStatus -= rand.Next(3, 8);
+                                playerShip.shieldStatus -= rand.Next(3, 8);
                                 Console.WriteLine("SHIELD HIT - MONITOR CHARGE");
                             }
                         }
@@ -256,17 +382,17 @@ namespace ConsoleApp1
 
 
                     // SHIELD CHARGE / SHUTDOWN CHECK 
-                    if (shieldStatus < 0)
+                    if (playerShip.shieldStatus < 0)
                     {
-                        shieldStatus = 0;
-                        shieldShutdown = true;
+                        playerShip.shieldStatus = 0;
+                        playerShip.shieldShutdown = true;
                     }
-                    if (shieldShutdown == true)
+                    if (playerShip.shieldShutdown == true)
                     {
-                        shieldStatus += 5.5f;
-                        if (shieldStatus > 100.0f)
+                        playerShip.shieldStatus += 5.5f;
+                        if (playerShip.shieldStatus > 100.0f)
                         {
-                            shieldStatus = 100.0f;
+                            playerShip.shieldStatus = 100.0f;
                         }
                     }
 
@@ -295,29 +421,29 @@ namespace ConsoleApp1
                     if (optionProcessed == "speed")
                     {
 
-                        if (engineShutdown != true)
+                        if (playerShip.engineShutdown != true)
                         {
 
                             speedToChangeTo += option[6];
 
                             if (Int32.Parse((string)speedToChangeTo) > 5)
                             {
-                                speed = 5;
+                                playerShip.speed = 5;
                             }
                             else if (Int32.Parse(speedToChangeTo) < 1)
                             {
                                 Console.WriteLine("CANNOT STOP THE ENGINE WHILE HOT. DISABLE ENGINE TO STOP.");
                                 Console.WriteLine("!! STOPPING ENGINE FREQUENTLY CAN CAUSE DAMAGE !!");
-                                speed = 1;
+                                playerShip.speed = 1;
                             }
                             else
                             {
-                                speed = Int32.Parse(speedToChangeTo);
+                                playerShip.speed = Int32.Parse(speedToChangeTo);
                             }
 
-                            if (speed > 4 && fuel <= 25.0 || speed > 4 && engineStatus <= 25.0)
+                            if (playerShip.speed > 4 && playerShip.fuel <= 25.0 || playerShip.speed > 4 && playerShip.engineStatus <= 25.0)
                             {
-                                speed = 4;
+                                playerShip.speed = 4;
                                 Console.WriteLine("FOR CREW AND SHIP SAFETY SPEED CANNOT EXCEED SAFE PARAMETERS WHILE FUEL IS LOW OR ENGINE IS DAMAGED");
                             }
                         }
@@ -351,23 +477,60 @@ namespace ConsoleApp1
 
                     }
 
-                    // REPAIR ENGINE //
+
+                    if (option == "save")
+                    {
+                        using (StreamWriter writer = new StreamWriter("S_P1.txt"))
+                        {
+                            foreach (string line in playerShip.returnShip())
+                            {
+                                writer.WriteLine(line);                      
+                            }
+
+                        }
+
+                        using (StreamWriter writer = new StreamWriter("S_S1.txt"))
+                        {
+                            foreach (string line in startingScenario.returnScenario())
+                            {
+                                writer.WriteLine(line);
+                            }
+
+                        }
+
+                        using (StreamWriter writer = new StreamWriter("S_R1.txt"))
+                        {
+                            foreach (string line in Minerals.returnResource())
+                            {
+                                writer.WriteLine(line);
+                            }
+                            foreach (string line in ExoticGas.returnResource())
+                            {
+                                writer.WriteLine(line);
+                            }
+
+                        }
+
+                    }
 
                     if (option == "inventory")
                     {
+                        Console.WriteLine("\n");
                         Minerals.displayInventory();
+                        ExoticGas.displayInventory();
+                        Console.WriteLine("\n");
                     }
-                    
+
                     if (option == "evade")
                     {
-                        if (timeToAsteroidImpact > 0)
+                        if (startingScenario.timeToAsteroidImpact > 0)
                         {
-                            temporaryVar = rand.Next(2,6);
-                            timeToAsteroidImpact = -1;
-                            fuel -= temporaryVar;
+                            temporaryVar = rand.Next(2, 6);
+                            startingScenario.timeToAsteroidImpact = -1;
+                            playerShip.fuel -= temporaryVar;
                             Console.WriteLine("!! SUCCESSFULLY AVOIDED OBJECT !!");
                             Console.WriteLine(temporaryVar + " FUEL CONSUMED IN EVASION");
-                            
+
                         }
                         else
                         {
@@ -378,10 +541,10 @@ namespace ConsoleApp1
                     // MINING ASTEROIDS
                     if (option == "mine")
                     {
-                        if (timeToAsteroidImpact > 0)
+                        if (startingScenario.timeToAsteroidImpact > 0)
                         {
                             temporaryVar = rand.Next(10, 15);
-                            fuel -= 5.0f;
+                            playerShip.fuel -= 5.0f;
                             Minerals.total += temporaryVar;
                             Console.WriteLine("MINERALS HARVESTED: " + temporaryVar);
                             if (Minerals.total > Minerals.maxAmount)
@@ -397,40 +560,40 @@ namespace ConsoleApp1
 
                     if (option == "engine")
                     {
-                        if (engineBroken)
+                        if (playerShip.engineBroken)
                         {
                             Console.WriteLine("ENGINE REQUIRES RESTART");
                         }
 
-                        
+
 
                         else
                         {
-                            if (engineShutdown == true)
+                            if (playerShip.engineShutdown == true)
                             {
-                                if (engineStopsToDamage == 0)
+                                if (playerShip.engineStopsToDamage == 0)
                                 {
-                                    engineStatus -= 5.0f;
+                                    playerShip.engineStatus -= 5.0f;
                                 }
-                                speed = 1;
+                                playerShip.speed = 1;
                             }
-                            engineShutdown = !engineShutdown;
+                            playerShip.engineShutdown = !playerShip.engineShutdown;
                         }
                     }
 
 
                     if (option == "repair hull")
                     {
-                        if (hullStatus < 100.0)
+                        if (playerShip.hullStatus < 100.0)
                         {
-                            if (repairMaterials >= ((100 - hullStatus)))
+                            if (playerShip.repairMaterials >= ((100 - playerShip.hullStatus)))
                             {
-                                repairMaterials -= (int)((100 - hullStatus));
-                                hullStatus += ((100 - hullStatus));
+                                playerShip.repairMaterials -= (int)((100 - playerShip.hullStatus));
+                                playerShip.hullStatus += ((100 - playerShip.hullStatus));
 
-                                if (hullStatus > 100.0)
+                                if (playerShip.hullStatus > 100.0)
                                 {
-                                    hullStatus = 100;
+                                    playerShip.hullStatus = 100;
                                 }
 
                                 Console.WriteLine("HULL REPAIRED");
@@ -446,16 +609,16 @@ namespace ConsoleApp1
 
                         if (option == "repair engine")
                         {
-                            if (engineStatus < 100.0)
+                            if (playerShip.engineStatus < 100.0)
                             {
-                                if (repairMaterials >= ((100 - engineStatus) / 2))
+                                if (playerShip.repairMaterials >= ((100 - playerShip.engineStatus) / 2))
                                 {
-                                    repairMaterials -= (int)((100 - engineStatus) / 2);
-                                    engineStatus += ((100 - engineStatus));
+                                    playerShip.repairMaterials -= (int)((100 - playerShip.engineStatus) / 2);
+                                    playerShip.engineStatus += ((100 - playerShip.engineStatus));
 
-                                    if (engineStatus > 100.0)
+                                    if (playerShip.engineStatus > 100.0)
                                     {
-                                        engineStatus = 100;
+                                        playerShip.engineStatus = 100;
                                     }
 
                                     Console.WriteLine("ENGINE REPAIRED");
@@ -473,9 +636,9 @@ namespace ConsoleApp1
 
                     // RESTART ENGINE //
 
-                    if (option == "restart engine" && engineShutdown == true && engineBroken == true && engineWaitTime < 0)
+                    if (option == "restart engine" && playerShip.engineShutdown == true && playerShip.engineBroken == true && playerShip.engineWaitTime < 0)
                     {
-                        engineWaitTime = 2;
+                        playerShip.engineWaitTime = 2;
                     }
 
 
@@ -483,20 +646,20 @@ namespace ConsoleApp1
 
                     if (option == "shield")
                     {
-                        if (shieldStatus >= 25.0 && shieldShutdown == true)
+                        if (playerShip.shieldStatus >= 25.0 && playerShip.shieldShutdown == true)
                         {
-                            shieldShutdown = false;
+                            playerShip.shieldShutdown = false;
                         }
-                        else if (shieldShutdown == false)
+                        else if (playerShip.shieldShutdown == false)
                         {
-                            shieldShutdown = true;
+                            playerShip.shieldShutdown = true;
                         }
                         else
                         {
                             Console.WriteLine("SHIELD MUST HAVE A MINIMUM CHARGE OF 25.0% TO ENABLE");
                         }
                     }
-                    
+
 
 
 
@@ -505,11 +668,11 @@ namespace ConsoleApp1
                     if (option == "status")
                     {
                         Console.Write("\n");
-                        Console.WriteLine("Fuel: " + fuel.ToString("0.00") + "%" + "/" + fuelMax.ToString("0.00") + "%");
-                        Console.WriteLine("Atmospheric Status: " + atmosphereStatus.ToString("0.00") + "%");
-                        Console.WriteLine("Hull Condition:  " + hullStatus.ToString("0.00") + "%");
-                        Console.Write("Engine Condition: " + engineStatus.ToString("0.00") + "%");
-                        if (engineShutdown == true)
+                        Console.WriteLine("Fuel: " + playerShip.fuel.ToString("0.00") + "%" + "/" + playerShip.fuelMax.ToString("0.00") + "%");
+                        Console.WriteLine("Atmospheric Status: " + playerShip.atmosphereStatus.ToString("0.00") + "%");
+                        Console.WriteLine("Hull Condition:  " + playerShip.hullStatus.ToString("0.00") + "%");
+                        Console.Write("Engine Condition: " + playerShip.engineStatus.ToString("0.00") + "%");
+                        if (playerShip.engineShutdown == true)
                         {
                             Console.Write(" OFFLINE\n");
                         }
@@ -517,10 +680,10 @@ namespace ConsoleApp1
                         {
                             Console.Write(" ONLINE\n");
                         }
-                        Console.WriteLine("Speed: " + speed);
+                        Console.WriteLine("Speed: " + playerShip.speed);
 
-                        Console.Write("Shield Charge: " + shieldStatus.ToString("0.00") + "%");
-                        if (shieldShutdown == true)
+                        Console.Write("Shield Charge: " + playerShip.shieldStatus.ToString("0.00") + "%");
+                        if (playerShip.shieldShutdown == true)
                         {
                             Console.Write(" OFFLINE\n");
                         }
@@ -528,10 +691,10 @@ namespace ConsoleApp1
                         {
                             Console.Write(" ONLINE\n");
                         }
-                        Console.WriteLine("Repair Materials: " + repairMaterials);
-                        Console.WriteLine("Crew: " + crew);
+                        Console.WriteLine("Repair Materials: " + playerShip.repairMaterials);
+                        Console.WriteLine("Crew: " + playerShip.crew);
 
-                        Console.WriteLine("\nDistance left: " + progressToNextLevel);
+                        Console.WriteLine("\nDistance left: " + startingScenario.progressToNextLevel);
                         Console.Write("\n\n");
                     }
                 }
