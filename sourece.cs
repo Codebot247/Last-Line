@@ -5,17 +5,32 @@ using System.Text.Json.Serialization;
 
 namespace ConsoleApp1
 {
-
-    [Serializable]
-    class Resource
+    public class Resource
     {
-        public string resourceName;
-        public int conversionRate;
-        public int convertsTo; //Which useable resource it refines to, like 1 for repair materials
-        public int sellsFor;
-        public int total;
-        public int maxAmount;
+        public string resourceName { get; set; }
+        public int conversionRate { get; set; }
+        public int convertsTo { get; set; } //Which useable resource it refines to, like 1 for repair materials
+        public int sellsFor { get; set; }
+        public int total { get; set; }
+        public int maxAmount { get; set; }
 
+        public Resource(string ResourceName, int ConversionRate, int ConvertsTo, int SellsFor, int Total, int MaxAmount)
+        {
+            this.resourceName = ResourceName;
+            this.conversionRate = ConversionRate;
+            this.convertsTo = ConvertsTo;
+            this.sellsFor = SellsFor;
+            this.total = Total;
+            this.maxAmount = MaxAmount;
+        }
+
+        public void saveVar(string[] setVars)
+        {
+
+            this.total = Int32.Parse(setVars[4]);
+            this.maxAmount = Int32.Parse(setVars[5]);
+
+        }
 
         public void displayInventory()
         {
@@ -28,9 +43,56 @@ namespace ConsoleApp1
             return returnResourceString;
         }
 
+        public string[] resourceVarsList()
+        {
+            string[] returnResourceString = { resourceName.ToString(), conversionRate.ToString(), 
+                convertsTo.ToString(), sellsFor.ToString(), 
+                total.ToString(), maxAmount.ToString() };
+
+            return returnResourceString;
+        }
+
+        public void setTotal(int amount)
+        {
+            this.total = amount;
+        }
     }
 
-    [Serializable]
+    public class Resources
+    {
+        public Resource[] resourceList;
+        public int totalResources = 0;
+
+        public void addResource(string ResourceName, int ConversionRate, int ConvertsTo, int SellsFor, int Total, int MaxAmount)
+        {
+            Array.Resize(ref resourceList, totalResources + 1);
+            resourceList[totalResources] = (new Resource(ResourceName, ConversionRate, ConvertsTo, SellsFor, Total, MaxAmount));
+            totalResources += 1;
+        }
+        public string[] getResource(int i)
+        {
+            return resourceList[i].resourceVarsList();
+        }
+        public string getResourceVar(int i, int j)
+        {
+            string[] resourceVars = resourceList[i].resourceVarsList();
+            return resourceVars[j];
+        }
+        public void setResourceTotal(int i, int amount)
+        {
+            resourceList[i].setTotal(amount);
+        }
+        public void displayPrices()
+        {
+            for (int i = 0; i != totalResources; i++)
+            {
+                string[] prices = resourceList[i].resourceVarsList();
+                Console.WriteLine(prices[0] + " " + prices[3] + "c");
+            }
+        }
+
+    }
+
     class Ship
     {
         public float fuel;
@@ -84,25 +146,10 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            // INITIALIZING RESOURCES
-            Resource Minerals = new Resource();
-            Minerals.resourceName = "Minerals";
-            Minerals.conversionRate = 20;
-            Minerals.convertsTo = 1;
-            Minerals.sellsFor = 5;
-            Minerals.total = 0;
-            Minerals.maxAmount = 100;
-
-            Resource ExoticGas = new Resource();
-            ExoticGas.resourceName = "Exotic Gas";
-            ExoticGas.conversionRate = 50;
-            ExoticGas.convertsTo = 2;
-            ExoticGas.sellsFor = 25;
-            ExoticGas.total = 0;
-            ExoticGas.maxAmount = 100;
-
-
-
+            // INITIALIZING RESOURCES. 1 = repair materials, 2 = fuel
+            Resources listOfResources = new Resources();
+            listOfResources.addResource("Minerals", 5, 1, 2, 0, 100);
+            listOfResources.addResource("Exotic Gas", 5, 2, 20, 0, 100);
 
             Ship playerShip = new Ship();
             playerShip.fuel = 100.0f;
@@ -133,7 +180,7 @@ namespace ConsoleApp1
             Scenario startingScenario = new Scenario();
             startingScenario.asteroidField = false;
             startingScenario.timeToAsteroidImpact = -1;
-            startingScenario.progressToNextLevel = 500;
+            startingScenario.progressToNextLevel = 200;
 
             startingScenario.combatArea = false;
             startingScenario.scrapShipArea = false;
@@ -141,22 +188,33 @@ namespace ConsoleApp1
 
             int scenario = 1;
 
+
             Console.Clear();
+
+            bool flight = true;
+            bool docked = false;
+            float difficulty = 1.0f;
+
             while (true)
             {
-                if (gameStart == false)
+                while (gameStart == false)
                 {
                     Console.WriteLine("WELCOME, ENGINEER");
                     Console.WriteLine("PLEASE SELECT A POSITION");
                     Console.WriteLine("1. INNER RING TRADING SHIP (EASY)");
                     Console.WriteLine("L. LOAD GAME");
                     string choice = Console.ReadLine().ToLower();
+
+
+
                     if (choice == "1")
                     {
                         playerShip.repairMaterials = 150;
                         playerShip.crew = 100;
+                        gameStart = true;
+                        Console.Clear();
                     }
-                    if (choice == "l")
+                    else if (choice == "l")
                     {
                         string[] shipVariables = System.IO.File.ReadAllLines(@"S_P1.txt");
                         playerShip.fuel = float.Parse(shipVariables[0]);
@@ -185,31 +243,214 @@ namespace ConsoleApp1
                         startingScenario.combatArea = bool.Parse(scenarioVariables[3]);
                         startingScenario.scrapShipArea = bool.Parse(scenarioVariables[4]);
                         startingScenario.nebulaArea = bool.Parse(scenarioVariables[5]);
-
+                        flight = bool.Parse(scenarioVariables[6]);
+                        docked = bool.Parse(scenarioVariables[7]);
+                        difficulty = Int32.Parse(scenarioVariables[8]);
 
 
                         string[] resourceVariables = System.IO.File.ReadAllLines(@"S_R1.txt");
-                        Minerals.total = Int32.Parse(resourceVariables[0]);
-                        Minerals.maxAmount = Int32.Parse(resourceVariables[1]);
+                        int iterateVariable = 0;
+                        for(int i = 0; i != 2; i++)
+                        {
+                            listOfResources.resourceList[i].total = Int32.Parse(resourceVariables[0+iterateVariable]);
+                            listOfResources.resourceList[i].maxAmount = Int32.Parse(resourceVariables[1+iterateVariable]);
+                            iterateVariable += 2;
+                        }
 
-                        ExoticGas.total = Int32.Parse(resourceVariables[2]);
-                        ExoticGas.maxAmount = Int32.Parse(resourceVariables[3]);
+                        gameStart = true;
+                        Console.Clear();
+                    }
+                    else
+                    {
+                        Console.Clear();
+                        Console.WriteLine("Please enter a valid choice");
                     }
 
-                    Console.Clear();
+                    
                 }
 
-                Console.WriteLine("Press enter to progress time");
-
-                while (true)
+                while (docked == true)
                 {
-
-                    if (startingScenario.progressToNextLevel < 0)
+                    bool shopping = false;
                     {
-                        Console.WriteLine("You reached your destination safely!\nThank you for playing the demo of my game!\nPlease send feedback to codebot247@gmail.com !\n");
-                        Console.WriteLine("Press enter to continue");
+                        Console.WriteLine("ENTER LIST TO VIEW AVAILABLE COMMANDS");
+                        Console.Write(">");
+                        string option = Console.ReadLine().ToLower();
+                        if (option == "list")
+                        {
+                            Console.Write("\n\n");
+                            Console.WriteLine("NEWS        Displays the latest headline");
+                            Console.WriteLine("SHOP        Displays the raw materials shop");
+                            Console.WriteLine("FUEL        Refills fuel at 100c for 10% conversion rate");
+                            Console.WriteLine("REPAIR      Repairs hull at 80c for 10% conversion rate");
+                            Console.WriteLine("CLEAR       Clears the screen");
+                            Console.WriteLine("UNDOCK      Undocks from the station");
+                            Console.Write("\n\n");
+                        }
+                        if (option == "clear")
+                        {
+                            Console.Clear();
+                        }
+                        if (option == "news")
+                        {
+                            Console.WriteLine("Still writing stuff, apologies! :)");
+                        }
+                        if (option == "fuel")
+                        {
+                            Console.WriteLine("IT WILL COST " + ((100 - playerShip.fuel) * 100) + "c");
+                            Console.WriteLine("YOU HAVE: " + playerShip.money + "c");
+                            if (playerShip.money < ((100 - playerShip.fuel) * 100)){
+                                Console.WriteLine("YOU DO NOT HAVE ENOUGH TO REFUEL. PRESS ENTER TO EXIT");
+                                Console.ReadLine();
+                            }
+                            else
+                            {
+                                Console.WriteLine("PRESS ENTER TO CONFIRM PURCHASE, OR TYPE EXIT TO LEAVE");
+                                option = Console.ReadLine();
+                                if (option != "exit")
+                                {
+                                    playerShip.money -= (int)((100 - playerShip.fuel) * 100);
+                                    playerShip.fuel = 100.0f;
+                                }
+                            }
+                        }
+
+                        if (option == "repair")
+                        {
+                            Console.WriteLine("IT WILL COST " + ((100 - playerShip.hullStatus) * 80) + "c");
+                            Console.WriteLine("YOU HAVE: " + playerShip.money + "c");
+                            if (playerShip.money < ((100 - playerShip.hullStatus) * 80))
+                            {
+                                Console.WriteLine("YOU DO NOT HAVE ENOUGH TO REPAIR. PRESS ENTER TO EXIT");
+                                Console.ReadLine();
+                            }
+                            else
+                            {
+                                Console.WriteLine("PRESS ENTER TO CONFIRM PURCHASE, OR TYPE EXIT TO LEAVE");
+                                option = Console.ReadLine();
+                                if (option != "exit")
+                                {
+                                    playerShip.money -= (int)((100 - playerShip.hullStatus) * 80);
+                                    playerShip.hullStatus = 100.0f;
+                                    playerShip.engineStatus = 100.0f;
+                                }
+                            }
+                        }
+
+
+                        if (option == "shop")
+                        {
+                            shopping = true;
+                            while (shopping = true)
+                            {
+                                playerShip.money = 200;
+                                int choice = 0;
+                                Console.Clear();
+                                Console.WriteLine("Shop currently has no real use! In development! :)");
+                                Console.WriteLine("YOU HAVE: " + playerShip.repairMaterials + "c");
+                                Console.WriteLine("\n\nSHOP MATERIALS:\n");
+                                listOfResources.displayPrices();
+                                Console.WriteLine("\nPLEASE ENTER MATERIAL TO BUY (OR TYPE EXIT TO LEAVE): ");
+                                Console.Write(">");
+                                option = Console.ReadLine().ToLower();
+                                if (option == "minerals") {
+                                    choice = 0;
+                                }
+                                else if (option == "exotic gas") {
+                                    choice = 1;
+                                }
+                                else if (option == "exit") { 
+                                    shopping = false;
+                                    break;
+                                }
+                                Console.WriteLine("PLEASE ENTER AMOUNT TO BUY: ");
+                                Console.Write(">");
+                                int amountToBuy = 0;
+
+                                try
+                                {
+                                    amountToBuy = Int32.Parse(Console.ReadLine());
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("INVALID INPUT");
+                                }
+
+                                if (amountToBuy * Int32.Parse(listOfResources.getResourceVar(choice, 3)) > playerShip.money)
+                                {
+                                    Console.WriteLine("YOU DO NOT HAVE ENOUGH TO BUY THAT");
+                                    Console.WriteLine("PRESS ENTER TO CONTINUE");
+                                    Console.ReadLine();
+                                }
+                                else
+                                {
+                                    Console.WriteLine("THAT WILL COST: " + (amountToBuy * Int32.Parse(listOfResources.getResourceVar(choice, 3))) + "c");
+                                    Console.WriteLine("PRESS ENTER TO CONTINUE PURCHASE OR TYPE EXIT TO LEAVE");
+                                    option = Console.ReadLine();
+                                    if (option == "exit")
+                                    {
+                                        shopping = false;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        playerShip.money -= (amountToBuy * Int32.Parse(listOfResources.getResourceVar(choice, 3)));
+                                        listOfResources.setResourceTotal(choice, amountToBuy);
+                                    }
+                                }
+                                  
+                            }                       
+                        }
+                        
+                        if (option == "undock")
+                        {
+                            var rand = new Random();
+                            if (rand.Next((int)(0*difficulty),20) > 10)
+                            {
+                                startingScenario.asteroidField = true;
+                            }
+                            if (rand.Next((int)(0 * difficulty), 40) > 20)
+                            {
+                                startingScenario.nebulaArea = true;
+                            }
+                            if (rand.Next((int)(1 * difficulty), 100) > 50){
+                                startingScenario.combatArea = true;
+                            }
+                            startingScenario.progressToNextLevel = rand.Next((int)(100 * difficulty), (int)(400 * difficulty));
+                            docked = false;
+                            flight = true;
+                        }
+                    }
+                }
+                Console.WriteLine("Press enter to progress time");
+                while (flight = true)
+                {
+                    var rand = new Random();
+
+                    if (startingScenario.progressToNextLevel <= 0)
+                    {
+                        int payment = (
+
+                            (
+                            (((100 - (int)playerShip.fuel)*100) - rand.Next(0, 10))
+                            +
+                            (((100 - (int)playerShip.hullStatus)*80) - rand.Next(0, 10))
+                            +
+                            (rand.Next(100, 200) * (int)difficulty)
+                            )
+
+                            );
+                        difficulty = difficulty * 1.5f;
+                        Console.WriteLine("DESTINATION REACHED");
+                        Console.WriteLine("--- PAYMENT RECEIVED: " + payment + "c --- ");
+                        playerShip.money += payment;
+                        flight = false;
+                        Random newsRandom = new Random();
+                        docked = true;
+                        Console.WriteLine("PRESS ENTER TO FINALIZE DOCKING");
                         Console.ReadLine();
-                        return;
+                        Console.WriteLine("SUCCESSFULLY INTERFACED WITH DOCK SYSTES, WELCOME ENGINEER");
+                        break;
                     }
 
 
@@ -235,7 +476,7 @@ namespace ConsoleApp1
 
                     /*========================================================================================================*/
 
-                    var rand = new Random();
+                    
 
 
 
@@ -418,7 +659,7 @@ namespace ConsoleApp1
                         }
                     }
 
-                    if (optionProcessed == "speed")
+                    if (optionProcessed == "speed" && option.Length >= 6)
                     {
 
                         if (playerShip.engineShutdown != true)
@@ -426,25 +667,37 @@ namespace ConsoleApp1
 
                             speedToChangeTo += option[6];
 
-                            if (Int32.Parse((string)speedToChangeTo) > 5)
+                            try
                             {
-                                playerShip.speed = 5;
-                            }
-                            else if (Int32.Parse(speedToChangeTo) < 1)
-                            {
-                                Console.WriteLine("CANNOT STOP THE ENGINE WHILE HOT. DISABLE ENGINE TO STOP.");
-                                Console.WriteLine("!! STOPPING ENGINE FREQUENTLY CAN CAUSE DAMAGE !!");
-                                playerShip.speed = 1;
-                            }
-                            else
-                            {
-                                playerShip.speed = Int32.Parse(speedToChangeTo);
-                            }
 
-                            if (playerShip.speed > 4 && playerShip.fuel <= 25.0 || playerShip.speed > 4 && playerShip.engineStatus <= 25.0)
+                                if (Int32.Parse((string)speedToChangeTo) > 5)
+                                {
+                                    Console.WriteLine("!! CANNOT EXCEED MAXIMUM SPEED !!");
+                                    playerShip.speed = 5;
+                                    Console.WriteLine("SPEED HAS CHANGED TO 5");
+                                }
+                                else if (Int32.Parse(speedToChangeTo) < 1)
+                                {
+                                    Console.WriteLine("CANNOT STOP THE ENGINE WHILE HOT. DISABLE ENGINE TO STOP.");
+                                    Console.WriteLine("!! STOPPING ENGINE FREQUENTLY CAN CAUSE DAMAGE !!");
+                                    Console.WriteLine("SPEED HAS CHANGED TO 1");
+                                    playerShip.speed = 1;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("SPEED HAS CHANGED TO " + Int32.Parse(speedToChangeTo));
+                                    playerShip.speed = Int32.Parse(speedToChangeTo);
+                                }
+
+                                if (playerShip.speed > 4 && playerShip.fuel <= 25.0 || playerShip.speed > 4 && playerShip.engineStatus <= 25.0)
+                                {
+                                    playerShip.speed = 4;
+                                    Console.WriteLine("FOR CREW AND SHIP SAFETY SPEED CANNOT EXCEED SAFE PARAMETERS WHILE FUEL IS LOW OR ENGINE IS DAMAGED");
+                                }
+                            }
+                            catch
                             {
-                                playerShip.speed = 4;
-                                Console.WriteLine("FOR CREW AND SHIP SAFETY SPEED CANNOT EXCEED SAFE PARAMETERS WHILE FUEL IS LOW OR ENGINE IS DAMAGED");
+                                Console.WriteLine("PLEASE PROPERLY FORMAT THE COMMAND");
                             }
                         }
                         else
@@ -463,8 +716,8 @@ namespace ConsoleApp1
                     {
                         Console.Write("\n\n");
                         Console.WriteLine("STATUS              Displays the status of ship systems.");
-                        Console.WriteLine("RESTART ENGINE      Restarts the engine in case of a shutdown. Will time to come back online.");
-                        Console.WriteLine("SPEED #             Sets the engine speed to the value given in #, the higher the speed the faster the engine degrades and uses more fuel.");
+                        Console.WriteLine("RESTART ENGINE      Restarts the engine in case of an engine failure. Will take time to come back online.");
+                        Console.WriteLine("SPEED #             Sets the engine speed to the value given in # between 1-5    , the higher the speed the faster the engine degrades and uses more fuel.");
                         Console.WriteLine("SHIELD              Toggles the shields on and off.");
                         Console.WriteLine("ENGINE              Toggles the engine on and off.");
                         Console.WriteLine("REPAIR ENGINE       Repairs the engine, consuming repair materials in the process.");
@@ -480,6 +733,7 @@ namespace ConsoleApp1
 
                     if (option == "save")
                     {
+                        Console.Write("PROGRESS SAVED");
                         using (StreamWriter writer = new StreamWriter("S_P1.txt"))
                         {
                             foreach (string line in playerShip.returnShip())
@@ -495,18 +749,18 @@ namespace ConsoleApp1
                             {
                                 writer.WriteLine(line);
                             }
+                            writer.WriteLine(flight);
+                            writer.WriteLine(docked);
+                            writer.WriteLine(difficulty);
 
                         }
 
                         using (StreamWriter writer = new StreamWriter("S_R1.txt"))
                         {
-                            foreach (string line in Minerals.returnResource())
+                            for (int i = 0; i != 2; i++)
                             {
-                                writer.WriteLine(line);
-                            }
-                            foreach (string line in ExoticGas.returnResource())
-                            {
-                                writer.WriteLine(line);
+                                writer.WriteLine(listOfResources.resourceList[i].total);
+                                writer.WriteLine(listOfResources.resourceList[i].maxAmount);
                             }
 
                         }
@@ -516,8 +770,10 @@ namespace ConsoleApp1
                     if (option == "inventory")
                     {
                         Console.WriteLine("\n");
-                        Minerals.displayInventory();
-                        ExoticGas.displayInventory();
+                        for (int i = 0; i != 2; i++) {
+                            Console.WriteLine(listOfResources.resourceList[i].resourceName + " " + 
+                                listOfResources.resourceList[i].total + "/" + listOfResources.resourceList[i].maxAmount);
+                        }
                         Console.WriteLine("\n");
                     }
 
@@ -545,11 +801,11 @@ namespace ConsoleApp1
                         {
                             temporaryVar = rand.Next(10, 15);
                             playerShip.fuel -= 5.0f;
-                            Minerals.total += temporaryVar;
+                            listOfResources.resourceList[0].total += temporaryVar;
                             Console.WriteLine("MINERALS HARVESTED: " + temporaryVar);
-                            if (Minerals.total > Minerals.maxAmount)
+                            if (listOfResources.resourceList[0].total > listOfResources.resourceList[0].maxAmount)
                             {
-                                Minerals.total = Minerals.maxAmount;
+                                listOfResources.resourceList[0].total = listOfResources.resourceList[0].maxAmount;
                             }
                         }
                         else
@@ -571,13 +827,21 @@ namespace ConsoleApp1
                         {
                             if (playerShip.engineShutdown == true)
                             {
+                                Console.WriteLine("ENGINE ENABLED");
+                                playerShip.speed = 1;
+                            }
+                            else
+                            {
                                 if (playerShip.engineStopsToDamage == 0)
                                 {
                                     playerShip.engineStatus -= 5.0f;
+                                    Console.WriteLine("ENGINE DAMAGE TAKEN FROM FREQUENT TOGGLING");
                                 }
-                                playerShip.speed = 1;
+                                Console.WriteLine("ENGINE DISABLED");
+                                playerShip.speed = 0;
                             }
                             playerShip.engineShutdown = !playerShip.engineShutdown;
+                            
                         }
                     }
 
@@ -636,9 +900,16 @@ namespace ConsoleApp1
 
                     // RESTART ENGINE //
 
-                    if (option == "restart engine" && playerShip.engineShutdown == true && playerShip.engineBroken == true && playerShip.engineWaitTime < 0)
+                    if (option == "restart engine" && playerShip.engineShutdown == true && playerShip.engineWaitTime < 0)
                     {
-                        playerShip.engineWaitTime = 2;
+                        if (playerShip.engineBroken == true)
+                        {
+                            playerShip.engineWaitTime = 2;
+                        }
+                        else
+                        {
+                            Console.WriteLine("RESTART ENGINE IS INTENDED TO BE USED WHEN THE ENGINE FAILS, USE ENGINE TO TOGGLE ENGINE");
+                        }
                     }
 
 
